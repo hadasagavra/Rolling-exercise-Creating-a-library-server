@@ -1,8 +1,8 @@
 import books from '../db.js'
 //1
 export const getAllBooks = (req,res)=>{
-    const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
+    const page = +req.query.page || 1;
+  const limit = +req.query.page || 10;
  const search = req.query.search || ""; 
      let filteredBooks =[];
  if(search!="")
@@ -13,8 +13,9 @@ filteredBooks= books.filter(x => x.name.includes(search));
      res.json({page,limit,result});
 }
 //2
-export const getBooktById=(req,res)=>{
+export const getBooktById=(req,res,next)=>{
     const b=books.find(x=>x.code==req.params.code)
+      if(!b){ next({status:404,message:`book ${req.params.code} not found!!`})}
     res.json(b);
 
 }
@@ -26,39 +27,39 @@ export const addBook=(req,res)=>{
 
 }
 //4
-export const updateBook=(req, res) => {
+export const updateBook=(req, res,next) => {
 const c =req.params.code;
   const index = books.findIndex(b => b.code === c);
-  if(index==-1){res.status(404).send("not found!!")}
+  if(index==-1){ next({status:404,message:`book ${req.params.code} not found!!`})}
   books[index]=req.body;
   res.json(books[index])
 
 }
 //5
-export const updateCust=(req,res)=>
+export const updateCust=(req,res,next)=>
     {
         const c =req.params.code;
         const user = req.params.user;
   const b = books.find(b => b.code == c);
-      if(!b){res.status(404).send("not found!!")}
+      if(!b){ next({status:404,message:`book ${req.params.code} not found!!`})}
       b.isBorrowed=true;
       const newBorrow={ date: '2025-12-27', clientCode:user}
       b.questions.push(newBorrow)
       res.json(b)
     }
 //6
-export const updateIsBorrowed=(req,res)=>{
+export const updateIsBorrowed=(req,res,next)=>{
 const c =req.params.code;
   const b = books.find(b => b.code === c);
-      if(!b){res.status(404).send("not found!!")}
+      if(!b){ next({status:404,message:`book ${req.params.code} not found!!`})}
 b.isBorrowed=false;
 res.json(b)
 }
 //7
-export const deleteBook=(req,res)=>{
+export const deleteBook=(req,res,next)=>{
 const c = req.params.code;
   const index = books.findIndex(b => b.code === c);
-  if(index==-1){res.status(404).send("not found!!")}
+  if(index==-1){ next({status:404,message:`book ${req.params.code} not found!!`})}
   else{
       books.splice(index,1)
   res.send("deleted seccussefuly")

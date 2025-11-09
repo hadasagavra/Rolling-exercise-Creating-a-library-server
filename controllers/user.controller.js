@@ -7,10 +7,10 @@ export const addUser=(req,res)=>{
         users.push(newUser)
      res.status(201).json({ message: 'User added', user: newUser });
 }
- export const updateUser=(req, res) => {
+ export const updateUser=(req, res,next) => {
 const c =req.params.code;
   const index = users.findIndex(b => b.code === c);
-  if(index==-1){res.status(404).send("not found!!")}
+  if(index==-1){ next({status:404,message:`user ${req.params.code} not found!!`})}
   users[index]=req.body;
   res.json(users[index]);
 }
