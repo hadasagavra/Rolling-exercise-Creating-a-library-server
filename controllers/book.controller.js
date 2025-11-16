@@ -1,5 +1,4 @@
 import books from '../db.js'
-import path from 'path';
 
 //1
 export const getAllBooks = (req,res)=>{
@@ -74,6 +73,7 @@ const c = req.params.code;
 export const borrowBook = (req, res, next) => {
     const bookCode = req.params.code;      // קוד ספר
     const userObj  = req.body.user;        // אובייקט משאיל
+    console.log('bookCode:', req.params.code);
 
      const book = books.find(b => b.code === bookCode);
     if (!book) {
@@ -99,18 +99,25 @@ export const borrowBook = (req, res, next) => {
     // החזרת ספר מעודכן
     res.json(book);
   }
-
-  //העלאת קבצים
-  app.post('/books/:code/upload', (req, res) => {
+export const bookFile = (req, res) => {
   const bookCode = req.params.code;
-  const image = req.files?.image;
-     if (!image) return res.status(400).json({ message: 'No file uploaded' });
-  if (!image.mimetype.startsWith('image/')) return res.status(400).json({ message: 'Only images allowed' });
-  const ext = path.extname(image.name);
-  const fileName = `${bookCode}_${Date.now()}${ext}`;
-  const uploadPath = path.join('public/image', fileName);
-   image.mv(uploadPath, err => {
-    if (err) return next({status :500, message: 'Upload failed', err });
-    res.json({ message: 'Uploaded!', url: `/images/${fileName}` });
+  const book = books.find((b) => b.code === bookCode);
+
+  if (!book) return res.status(404).send(`Book ${bookCode} not found`);
+  if (!req.file) return res.status(400).send("No file uploaded.");
+
+  const oldPath = req.file.path;
+  const ext = path.extname(req.file.originalname);
+
+  // שם הספר האמיתי אם קיים, אחרת קוד הספר
+  const bookNameSafe = (book.name || bookCode).replace(/\s+/g, "_");
+  const newPath = path.join("public/images", `${bookNameSafe}-${Date.now()}${ext}`);
+
+  fs.renameSync(oldPath, newPath);
+
+  res.json({
+    message: `File uploaded for book ${bookCode}`,
+    filename: path.basename(newPath),
+    path: `/images/${path.basename(newPath)}`,
   });
-  })
+};
