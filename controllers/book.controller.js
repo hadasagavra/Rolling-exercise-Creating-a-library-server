@@ -1,4 +1,6 @@
 import books from '../db.js'
+import path from 'path';
+
 //1
 export const getAllBooks = (req,res)=>{
     const page = +req.query.page || 1;
@@ -97,3 +99,18 @@ export const borrowBook = (req, res, next) => {
     // החזרת ספר מעודכן
     res.json(book);
   }
+
+  //העלאת קבצים
+  app.post('/books/:code/upload', (req, res) => {
+  const bookCode = req.params.code;
+  const image = req.files?.image;
+     if (!image) return res.status(400).json({ message: 'No file uploaded' });
+  if (!image.mimetype.startsWith('image/')) return res.status(400).json({ message: 'Only images allowed' });
+  const ext = path.extname(image.name);
+  const fileName = `${bookCode}_${Date.now()}${ext}`;
+  const uploadPath = path.join('public/image', fileName);
+   image.mv(uploadPath, err => {
+    if (err) return next({status :500, message: 'Upload failed', err });
+    res.json({ message: 'Uploaded!', url: `/images/${fileName}` });
+  });
+  })

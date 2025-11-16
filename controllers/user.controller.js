@@ -19,7 +19,7 @@ export const addCourseToUser = (req, res, next) => {
   const index = users.findIndex(u => u.code === c);
   if(index === -1) return next({ status: 404, message: `User ${c} not found!` });
   const course = req.body.course; // הקורס שנשלח ב-body
-  if(!course) return res.status(400).json({ message: 'Course is required' });
+  if(!course) return next({status:400,message: 'Course is required' });
 
   // אם אין למשתמש תת-תכונה courses – יוצרים מערך ריק
   if(!Array.isArray(users[index].courses)) {

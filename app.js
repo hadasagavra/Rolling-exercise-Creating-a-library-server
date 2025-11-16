@@ -7,12 +7,14 @@ import { generalError,notFound } from './middlewares/errors.middleware.js';
 import { config } from 'dotenv';
 import cors from 'cors'
 import morgan from 'morgan'
+import fileUpload from 'express-fileupload';
 
 config();
 const app=express();
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.static('public/images'));
+app.use(fileUpload({ limits: { fileSize: 1 * 1024 * 1024 } }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(addRequestDate,printOnlyGet,blockDays([7]));
