@@ -64,5 +64,36 @@ const c = req.params.code;
       books.splice(index,1)
   res.send("deleted seccussefuly")
   }
+  
 
 }
+
+
+export const borrowBook = (req, res, next) => {
+    const bookCode = req.params.code;      // קוד ספר
+    const userObj  = req.body.user;        // אובייקט משאיל
+
+     const book = books.find(b => b.code === bookCode);
+    if (!book) {
+        return next({ status: 404, message: `book ${bookCode} not found` });
+    }
+
+    const user = users.find(u => u.code === userObj.code);
+    if (!user) {
+        return next({ status: 404, message: `user ${userObj.code} not found` });
+    }
+
+        book.isBorrowed = true;
+
+        const borrowRecord = {
+        date: new Date().toISOString().split("T")[0],
+        clientCode: user.code
+    };
+    book.questions.push(borrowRecord);
+  if (!user.books.includes(book.code)) {
+        user.books.push(book.code);
+    }
+
+    // החזרת ספר מעודכן
+    res.json(book);
+  }
