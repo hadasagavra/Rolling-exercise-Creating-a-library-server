@@ -21,4 +21,6 @@ router.patch('/:code',updateIsBorrowed)
 router.delete('/:code',deleteBook)
 
 router.patch('/borrow/:code',joiValidator(validateBook.borrowBody),joiValidator(validateBook.borrowParams), borrowBook);
+router.patch('/books/:code/upload')
+
 export default router;
