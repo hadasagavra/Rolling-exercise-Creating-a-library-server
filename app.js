@@ -7,7 +7,10 @@ import { generalError,notFound } from './middlewares/errors.middleware.js';
 import { config } from 'dotenv';
 import cors from 'cors'
 import morgan from 'morgan'
+import { connectDB } from './config/connect-data.js';
+
 config();
+connectDB()
 const app=express();
 app.use(cors());
 app.use(morgan('dev'));

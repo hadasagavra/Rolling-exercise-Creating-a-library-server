@@ -1,81 +1,116 @@
-import books from '../db.js'
+import Book from "../model/book.model.js";
+import { isValidObjectId } from "mongoose";
+import books from "../db.js"
+
 
 //1
-export const getAllBooks = (req,res)=>{
-    const page = +req.query.page || 1;
-  const limit = +req.query.page || 10;
- const search = req.query.search || ""; 
-     let filteredBooks =[];
- if(search!="")
-filteredBooks= books.filter(x => x.name.includes(search)); 
- const start=(page-1)*limit;
- const end=start+limit;
-    const result = filteredBooks.slice(start, end);
-     res.json({page,limit,result});
+export const getAllBooks =async (req,res)=>{
+  try{
+    const { page = 1, limit = 5, name = '' } = req.query;
+     const filteredBooks =await Book.find({ name: new RegExp(name, 'i') }).skip((page-1)*limit).limit(limit);
+     res.json(filteredBooks);
+  }catch(error){
+next({status:500,message:`server failed`});  }
+        
+
 }
 //2
-export const getBooktById=(req,res,next)=>{
-    const b=books.find(x=>x.code==req.params.code)
-      if(!b){ next({status:404,message:`book ${req.params.code} not found!!`})}
-    res.json(b);
 
-}
+export const getBookById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id))
+      return next({ status: 404, message: `Book ${id} not found!` });
+
+    const book = await Book.findById(id);
+    if (!book)
+      return next({ status: 404, message: `Book ${id} not found!` });
+
+    res.json(book);
+  } catch (error) {
+    next({ status: 500, message: error.message });
+  }
+};
+
 //3
-export const addBook=(req,res)=>{
-    const newBook=req.body;
-    books.push(newBook)
- res.status(201).json({ message: 'Book added', book: newBook });
-
-}
+export const addBook = async (req, res, next) => {
+  try {
+    const newBook = new Book({ ...req.body });
+    await newBook.save();
+    res.status(201).json({ message: "Book added", book: newBook });
+  } catch (error) {
+    next({ status: 500, message: error.message });
+  }
+};
 //4
-export const updateBook=(req, res,next) => {
-const c =req.params.code;
-  const index = books.findIndex(b => b.code === c);
-  if(index==-1){ next({status:404,message:`book ${req.params.code} not found!!`})}
-  books[index]=req.body;
-  res.json(books[index])
+export const updateBook = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id))
+      return next({ status: 404, message: `Book ${id} not found!` });
 
-}
+    const updatedBook = await Book.findByIdAndUpdate(id, { $set: req.body }, { new: true });
+    if (!updatedBook)
+      return next({ status: 404, message: `Book ${id} not found!` });
+
+    res.json(updatedBook);
+  } catch (error) {
+    next({ status: 500, message: error.message });
+  }
+};
 //5
-export const updateCust=(req,res,next)=>
+export const updateCust=async(req,res,next)=>
     {
-        const c =req.params.code;
+      try{
+         const c =req.params.code;
         const user = req.params.user;
-  const b = books.find(b => b.code == c);
+    const b = await Book.findOne({ code: bookCode });
       if(!b){ next({status:404,message:`book ${req.params.code} not found!!`})}
       b.isBorrowed=true;
       const newBorrow={ date: '2025-12-27', clientCode:user}
       b.questions.push(newBorrow)
+       await b.save();
       res.json(b)
+      }catch(error){
+       next({ status: 500, message: error.message });
+      }
+       
     }
 //6
-export const updateIsBorrowed=(req,res,next)=>{
+export const updateIsBorrowed=async(req,res,next)=>{
+  try{
 const c =req.params.code;
-  const b = books.find(b => b.code === c);
-      if(!b){ next({status:404,message:`book ${req.params.code} not found!!`})}
-b.isBorrowed=false;
-res.json(b)
+    const book = await Book.findOne({ code: bookCode });
+      if(!book){ next({status:404,message:`book ${req.params.code} not found!!`})}
+book.isBorrowed=false;
+await book.save();
+res.json(book)
+  }
+catch(error){    next({ status: 500, message: error.message });
+}
+
 }
 //7
-export const deleteBook=(req,res,next)=>{
-const c = req.params.code;
-  const index = books.findIndex(b => b.code === c);
-  if(index==-1){ next({status:404,message:`book ${req.params.code} not found!!`})}
-  else{
-      books.splice(index,1)
-  res.send("deleted seccussefuly")
-  }
-  
+export const deleteBook=async(req,res,next)=>{
+  try{
+    const deletedBook = await Book.findOneAndDelete({ code: bookCode });
+    if (!deletedBook) return next({ status: 404, message: `Book ${bookCode} not found!!` });
 
+    res.json({ message: "Deleted successfully", book: deletedBook });
+  }catch(error){
+    next({ status: 500, message: error.message });
+  }
 }
 
 
-export const borrowBook = (req, res, next) => {
+export const borrowBook =async (req, res, next) => {
+  try{
     const bookCode = req.params.code;      // קוד ספר
     const userObj  = req.body.user;        // אובייקט משאיל
     console.log('bookCode:', req.params.code);
 
-     const book = books.find(b => b.code === bookCode);
+    const book = await Book.findOne({ code: bookCode });
     if (!book) {
         return next({ status: 404, message: `book ${bookCode} not found` });
     }
@@ -95,9 +130,13 @@ export const borrowBook = (req, res, next) => {
   if (!user.books.includes(book.code)) {
         user.books.push(book.code);
     }
-
-    // החזרת ספר מעודכן
+  await book.save();
     res.json(book);
+  }catch(error){
+        next({ status: 500, message: error.message });
+
+  }
+    
   }
 export const bookFile = (req, res) => {
   const bookCode = req.params.code;

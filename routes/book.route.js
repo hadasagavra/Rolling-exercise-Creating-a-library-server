@@ -1,5 +1,5 @@
 import { Router } from "express";   
-import {borrowBook ,getAllBooks,getBooktById,updateBook,updateCust,updateIsBorrowed,deleteBook,addBook,bookFile } from "../controllers/book.controller.js";
+import {borrowBook ,getAllBooks,getBookById,updateBook,updateCust,updateIsBorrowed,deleteBook,addBook,bookFile } from "../controllers/book.controller.js";
 const router=Router();
 import { joiValidator } from "../middlewares/joi-validator.middleware.js";
 import { validateBook } from "../model/book.model.js";
@@ -22,7 +22,7 @@ const upload = multer({
 //1
 router.get('/',getAllBooks);
 //2
-router.get('/:code',getBooktById);
+router.get('/:code',getBookById);
 //3
 router.post('/',addBook)
 //4
