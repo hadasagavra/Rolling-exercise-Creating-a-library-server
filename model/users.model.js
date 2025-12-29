@@ -1,7 +1,30 @@
 import Joi from 'joi';
+import {model, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+const userSchema=new Schema(
+  {
+   username: String,
+    email: { type: String, unique: true },
+    password: String,
+    phone: String
+  }
+)
+
+userSchema.pre('save',function(){
+    if (!this.isModified('password')) return;
+    const salt=bcrypt.genSaltSync(process.env.SALT);
+    const hash=bcrypt.hashSync(this.password,salt);
+    this.password=hash;
+})
+
 
 export const validateUser=
-{
+{  
+  login: Joi.object({
+        email: Joi.string().email().required(),
+        password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required()
+    }),
    updateUser:Joi.object({
        code: Joi.string().pattern(/^U\d{3}$/).required(),
        name:Joi.string(),
@@ -16,3 +39,7 @@ export const validateUser=
   status: Joi.string().valid('active', 'completed', 'dropped')
    })
 }
+const User = model("User", userSchema);
+
+// ייצוא המודל
+export default User;
