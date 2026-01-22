@@ -17,6 +17,20 @@ userSchema.pre('save',function(){
     const hash=bcrypt.hashSync(this.password,salt);
     this.password=hash;
 })
+userSchema.method('comparePasswords',function(newPassword){
+  const isEqual=bcrypt.compareSync(this.password,newPassword)
+  return isEqual
+})
+userSchema.set("toJSON",{
+  virtuals:true,
+  transform(doc,converted){
+        delete converted.__v;
+        delete converted._id;
+        delete converted.password;
+  }
+}
+
+)
 
 
 export const validateUser=
