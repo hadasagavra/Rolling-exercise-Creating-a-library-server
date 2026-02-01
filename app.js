@@ -9,6 +9,8 @@ import cors from 'cors'
 import morgan from 'morgan'
 import { connectDB } from './config/connect-data.js';
 
+console.log('tu bishvat igia....');
+
 config();
 connectDB()
 const app=express();
